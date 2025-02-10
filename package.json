@@ -1,0 +1,24 @@
+{
+  "name": "evbpmusic-backend",
+  "version": "1.0.0",
+  "description": "Node.js server with Express to handle simple backend apis for evbpmusic-retro.",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anoveskey1/evbpmusic-backend.git"
+  },
+  "author": "Adam Noveskey",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/anoveskey1/evbpmusic-backend/issues"
+  },
+  "homepage": "https://github.com/anoveskey1/evbpmusic-backend#readme",
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

@@ -33,6 +33,10 @@ app.get('/', (req, res) => {
 app.post('/api/send-email', (req, res) => {
   const { email, message, subject } = req.body;
 
+  if (!email || !message || !subject) {
+    return res.status(400).json({ error: 'Missing required fields.' });
+  }
+
   const transporter = nodemailer.createTransport({
     host: 'smtp.office365.com',
     port: 587,
@@ -70,6 +74,10 @@ app.get('/api/visitor-count', (req, res) => {
     res.json({ count: visitorCount });
 })
 
-app.listen(port, () => {
+if (require.main === module) {
+  app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
   });
+}
+
+module.exports = app;

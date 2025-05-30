@@ -4,7 +4,7 @@
   "description": "Node.js server with Express to handle simple backend apis for evbpmusic-retro.",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",

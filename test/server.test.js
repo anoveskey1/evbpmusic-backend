@@ -3,7 +3,7 @@ const nodemailer = require('nodemailer');
 const sinon = require('sinon');
 const request = require('supertest');
 
-const app = require('./server');
+const app = require('../server');
 
 const expect = chai.expect;
 

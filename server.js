@@ -2,7 +2,9 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const express = require('express');
-const nodemailer = require('nodemailer');
+const { ClientSecretCredential } = require('@azure/identity');
+const { Client } = require('@microsoft/microsoft-graph-client');
+require('isomorphic-fetch');
 
 const app = express();
 const port = 3000;
@@ -30,43 +32,58 @@ app.get('/', (req, res) => {
   res.send('There is nothing to see here. Perhaps you meant to visit the frontend?');
 });
 
-app.post('/api/send-email', (req, res) => {
+app.post('/api/send-email', async (req, res) => {
   const { email, message, subject } = req.body;
 
   if (!email || !message || !subject) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
 
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.office365.com',
-    port: 587,
-    secure: false, 
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD
-    },
-    tls: {
-      rejectUnauthorized: !isDevelopment // Disable TLS certificate validation in development
-    }
-  });
+  try {
+    const credential = new ClientSecretCredential(
+      process.env.OAUTH_TENANT_ID,
+      process.env.OAUTH_CLIENT_ID,
+      process.env.OAUTH_CLIENT_SECRET
+    );
 
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    replyTo: email,
-    subject: subject,
-    text: message,
-    to: process.env.EMAIL_RECIPIENT
-  };
+    const tokenResponse = await credential.getToken("https://graph.microsoft.com/.default");
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error('Error sending email:', error);
-      return res.status(500).json({ error: 'Failed to send email' });
-    }
+    const graphClient = Client.init({
+      authProvider: (done) => {
+        done(null, tokenResponse.token);
+      }
+    });
 
-    console.log('Email sent:', info.response);
+    await graphClient.api('/users/' + process.env.EMAIL_SENDER + '/sendMail')
+    .post({
+      message: {
+        body: {
+          contentType: 'Text',
+          content: message
+        },
+        replyTo: [
+          {
+            emailAddress: {
+              address: email
+            }
+          }
+        ],
+        subject: subject,
+        toRecipients: [
+          {
+            emailAddress: {
+              address: process.env.EMAIL_RECIPIENT
+            }
+          }
+        ]
+      }
+    });
+
     res.json({ message: 'Email sent successfully' });
-  });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({ error: 'Failed to send email' });
+  }
 });
 
 app.get('/api/visitor-count', (req, res) => {

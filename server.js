@@ -11,13 +11,13 @@ const path = require('path');
 const { ClientSecretCredential } = require('@azure/identity');
 const { Client } = require('@microsoft/microsoft-graph-client');
 const getGuestbookEntries = require('./functions/getGuestbookEntries.js');
+const getVisitorCount = require('./functions/getVisitorCount.js');
+const signGuestbook = require('./functions/signGuestbook.js');
 
 const app = express();
-const port = 3000;
+const port = process.env.LISTENING_PORT;
 
 const isDevelopment = process.env.NODE_ENV === 'development';
-
-let visitorCount = 0;
 
 const allowedOrigins = [process.env.ALLOWED_ORIGINS];
 
@@ -40,10 +40,7 @@ app.get('/', (req, res) => {
 
 app.get('/api/guestbook-entries', getGuestbookEntries);
 
-app.get('/api/visitor-count', (req, res) => {
-    visitorCount += 1;
-    res.json({ count: visitorCount });
-})
+app.get('/api/visitor-count', getVisitorCount);
 
 app.post('/api/send-email', async (req, res) => {
   const { email, message, subject } = req.body;
@@ -101,10 +98,10 @@ app.post('/api/send-email', async (req, res) => {
 
 app.post('/api/send-validation-code-to-email', async (req, res) => {
   const hashCode = crypto.randomBytes(Math.ceil(42 / 2)).toString('hex').slice(0, 42);
-  const filePath = path.join(__dirname, '../data', 'guestbook_users.json');
+  const filePath = path.join(__dirname, 'data', 'guestbook_users.json');
   const { email, username } = req.body;
   let userData = {};
-  
+
   if (!email || !username) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
@@ -161,28 +158,12 @@ app.post('/api/send-validation-code-to-email', async (req, res) => {
   res.json({ message: 'A validation code has been sent to the email address you provided. Please enter it into the validation code input field to continue.' });
 });
 
-app.post('/api/sign-guestbook', async (req, res) => {
-  const { username, message } = req.body;
-  const filePath = path.join(__dirname, '../data', 'guestbook_entries.json');
-  let guestbookEntries = [];
-  if (fs.existsSync(filePath)) {
-    const rawData = fs.readFileSync(filePath, 'utf8');
-    if (rawData.trim().length > 0) {
-      guestbookEntries = JSON.parse(rawData);
-    }
-  }
-
-  guestbookEntries.push({ username, message });
-
-  fs.writeFileSync(filePath, JSON.stringify(guestbookEntries, null, 2));
-
-  res.status(201).json({ message: 'Thanks for signing my guestbook. You rock!' });
-});
+app.post('/api/sign-guestbook', signGuestbook);
 
 app.post('/api/validate-user', async (req, res) => {
   const { validationCode } = req.body;
 
-  const filePath = path.join(__dirname, '../data', 'guestbook_users.json');
+  const filePath = path.join(__dirname, 'data', 'guestbook_users.json');
   let userData = {};
 
   if (fs.existsSync(filePath)) {

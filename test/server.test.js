@@ -26,13 +26,24 @@ const fsStub = {
 
 const consoleErrorStub = sinon.stub(console, 'error');
 
+proxyquire.noCallThru();
+
+const getGuestbookEntries = proxyquire('../functions/getGuestbookEntries', { fs: fsStub });
+
 const app = proxyquire('../server', {
     '@azure/identity': { ClientSecretCredential: credentialStub },
     '@microsoft/microsoft-graph-client': { Client: graphClientStub },
-    'fs': fsStub,
+    fs: fsStub,
+    './functions/getGuestbookEntries': getGuestbookEntries
 });
 
 describe('Server', () => {
+    beforeEach(() => {
+        fsStub.existsSync.reset();
+        fsStub.readFileSync.reset();
+        fsStub.writeFileSync.reset();
+    });
+
     afterEach(() => {
         postStub.reset();
         postStub.resolves();
@@ -63,6 +74,11 @@ describe('Server', () => {
         });
 
     describe('GET /api/guestbook-entries', () => {
+        // beforeEach(() => {
+        //     fsStub.existsSync.reset();
+        //     fsStub.readFileSync.reset();
+        //     fsStub.writeFileSync.reset();
+        // });
         it('should return guestbook entries on GET /api/guestbook-entries', async () => {
             const mockEntries = [{ username: 'Test_User2', message: 'First!'}, { username: 'Test_User', message: 'Hello World' }];
             fsStub.existsSync.returns(true);
@@ -78,8 +94,9 @@ describe('Server', () => {
             fsStub.readFileSync.callsFake(() => JSON.stringify([]));
 
             const res = await request(app).get('/api/guestbook-entries');
-            expect(res.status).to.equal(404);
             expect(res.body).to.be.an('object');
+            expect(res.status).to.equal(404);
+            // expect(res.body).to.be.an('object');
         });
     });
 

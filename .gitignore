@@ -1,4 +1,4 @@
 .env
 node_modules
-guestbook_entries.json
-guestbook_users.json
+data/*
+!data/.gitkeep

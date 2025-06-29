@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { ClientSecretCredential } = require('@azure/identity');
 const { Client } = require('@microsoft/microsoft-graph-client');
+const getGuestbookEntries = require('./functions/getGuestbookEntries.js');
 
 const app = express();
 const port = 3000;
@@ -18,7 +19,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 
 let visitorCount = 0;
 
-const allowedOrigins = [process.env.ALLOWED_ORIGIN];
+const allowedOrigins = [process.env.ALLOWED_ORIGINS];
 
 app.use(cors({
     origin: function (origin, callback) {
@@ -37,23 +38,7 @@ app.get('/', (req, res) => {
   res.send('There is nothing to see here. Perhaps you meant to visit the frontend?');
 });
 
-app.get('/api/guestbook-entries', (req, res) => {
-  const filePath = path.join(__dirname, 'guestbook_entries.json');
-  let entries = [];
-
-  if (fs.existsSync(filePath)) {
-    const rawData = fs.readFileSync(filePath, 'utf8');
-    if (rawData.trim().length > 0) {
-      entries = JSON.parse(rawData);
-    }
-  }
-
-  if (entries.length === 0) {
-    return res.status(404).json({ code: ErrorCodes.DATA_UNAVAILABLE, message: 'No guestbook entries found.' });
-  } else {
-    res.status(200).json(entries);
-  }
-});
+app.get('/api/guestbook-entries', getGuestbookEntries);
 
 app.get('/api/visitor-count', (req, res) => {
     visitorCount += 1;
@@ -116,7 +101,7 @@ app.post('/api/send-email', async (req, res) => {
 
 app.post('/api/send-validation-code-to-email', async (req, res) => {
   const hashCode = crypto.randomBytes(Math.ceil(42 / 2)).toString('hex').slice(0, 42);
-  const filePath = path.join(__dirname, 'guestbook_users.json');
+  const filePath = path.join(__dirname, '../data', 'guestbook_users.json');
   const { email, username } = req.body;
   let userData = {};
   
@@ -178,7 +163,7 @@ app.post('/api/send-validation-code-to-email', async (req, res) => {
 
 app.post('/api/sign-guestbook', async (req, res) => {
   const { username, message } = req.body;
-  const filePath = path.join(__dirname, 'guestbook_entries.json');
+  const filePath = path.join(__dirname, '../data', 'guestbook_entries.json');
   let guestbookEntries = [];
   if (fs.existsSync(filePath)) {
     const rawData = fs.readFileSync(filePath, 'utf8');
@@ -197,7 +182,7 @@ app.post('/api/sign-guestbook', async (req, res) => {
 app.post('/api/validate-user', async (req, res) => {
   const { validationCode } = req.body;
 
-  const filePath = path.join(__dirname, 'guestbook_users.json');
+  const filePath = path.join(__dirname, '../data', 'guestbook_users.json');
   let userData = {};
 
   if (fs.existsSync(filePath)) {

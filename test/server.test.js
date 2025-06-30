@@ -29,13 +29,23 @@ const consoleErrorStub = sinon.stub(console, 'error');
 proxyquire.noCallThru();
 
 const getGuestbookEntries = proxyquire('../functions/getGuestbookEntries', { fs: fsStub });
+const sendValidationCodeToEmail = proxyquire('../functions/sendValidationCodeToEmail', {
+    fs: fsStub,
+    '@azure/identity': { ClientSecretCredential: credentialStub },
+    '@microsoft/microsoft-graph-client': { Client: graphClientStub }
+});
 const signGuestbook = proxyquire('../functions/signGuestbook', { fs: fsStub });
+const validateUser = proxyquire('../functions/validateUser', { fs: fsStub });
+
+
 const app = proxyquire('../server', {
     '@azure/identity': { ClientSecretCredential: credentialStub },
     '@microsoft/microsoft-graph-client': { Client: graphClientStub },
     fs: fsStub,
     './functions/getGuestbookEntries': getGuestbookEntries,
-    './functions/signGuestbook': signGuestbook
+    './functions/sendValidationCodeToEmail': sendValidationCodeToEmail,
+    './functions/signGuestbook': signGuestbook,
+    './functions/validateUser': validateUser
 });
 
 describe('Server', () => {

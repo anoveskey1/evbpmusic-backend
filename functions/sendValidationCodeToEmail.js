@@ -5,14 +5,18 @@ const fs = require('fs');
 const path = require('path');
 const ErrorCodes = require('../error_codes.js');
 
-async function sendValidationCodeToEmail (req, res) {
+async function sendValidationCodeToEmail(request, response) {
   const hashCode = crypto.randomBytes(Math.ceil(42 / 2)).toString('hex').slice(0, 42);
   const filePath = path.join(__dirname, '../data', 'guestbook_users.json');
-  const { email, username } = req.body;
+  const { email, username } = request.body;
   let userData = {};
 
   if (!email || !username) {
-    return res.status(400).json({ error: 'Missing required fields.' });
+    return response
+    .status(400)
+    .json({ 
+      error: 'Missing required fields.' 
+    });
   }
 
   if (fs.existsSync(filePath)) {
@@ -25,7 +29,12 @@ async function sendValidationCodeToEmail (req, res) {
   const userAlreadyExists = Object.values(userData).some(user => user.email === email || user.username === username);
 
   if (userAlreadyExists) {
-    return res.status(400).json({ code: ErrorCodes.USER_ALREADY_EXISTS, message: 'Everybody gets one. If you feel you have reached this message in error, please contact us - include your email and username - and we\'ll see what we can do to help!' });
+    return response
+    .status(400)
+    .json({ 
+      code: ErrorCodes.USER_ALREADY_EXISTS, 
+      message: 'Everybody gets one. If you feel you have reached this message in error, please contact us - include your email and username - and we\'ll see what we can do to help!' 
+    });
   } else {
     userData[hashCode] = { username, email };
     fs.writeFileSync(filePath, JSON.stringify(userData, null, 2));
@@ -64,7 +73,10 @@ async function sendValidationCodeToEmail (req, res) {
     }
   })
 
-  res.json({ message: 'A validation code has been sent to the email address you provided. Please enter it into the validation code input field to continue.' });
+  response
+  .json({ 
+    message: 'A validation code has been sent to the email address you provided. Please enter it into the validation code input field to continue.' 
+  });
 }
 
 module.exports = sendValidationCodeToEmail;

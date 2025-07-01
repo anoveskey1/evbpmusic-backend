@@ -1,8 +1,8 @@
 let visitorCount = 0;
 
-function getVisitorCount(req, res) {
+function getVisitorCount(request, response) {
     visitorCount += 1;
-    res.json({ count: visitorCount });
+    response.json({ count: visitorCount });
 }
 
 module.exports = getVisitorCount;

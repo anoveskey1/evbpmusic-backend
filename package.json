@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/anoveskey1/evbpmusic-backend#readme",
   "dependencies": {
-    "@azure/identity": "^4.13.0",
+    "@azure/identity": "^4.13.1",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "body-parser": "^2.2.2",
     "cookie-parser": "^1.4.7",

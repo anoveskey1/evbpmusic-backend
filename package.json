@@ -23,7 +23,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
-    "express": "^4.22.1",
+    "express": "^4.22.2",
     "isomorphic-fetch": "^3.0.0",
     "proxyquire": "^2.1.3"
   },
